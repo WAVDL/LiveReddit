@@ -23,7 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SubredditsList"></activity>
+        <activity android:name=".SubredditsList" />
+        <activity android:name=".ThreadsListActivity"></activity>
     </application>
 
 </manifest>

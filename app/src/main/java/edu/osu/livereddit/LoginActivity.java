@@ -3,6 +3,8 @@ package edu.osu.livereddit;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Application;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
@@ -30,6 +32,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import net.dean.jraw.RedditClient;
+import net.dean.jraw.http.UserAgent;
+import net.dean.jraw.http.oauth.Credentials;
+import net.dean.jraw.http.oauth.OAuthData;
+import net.dean.jraw.http.oauth.OAuthException;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,14 +53,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      */
     private static final int REQUEST_READ_CONTACTS = 0;
 
-    /**
-     * A dummy authentication store containing known user names and passwords.
-     * TODO: remove after connecting to a real authentication system.
-     */
-    private static final String[] DUMMY_CREDENTIALS = new String[]{
-            "foo@example.com:hello", "bar@example.com:world"
-    };
-
     private static final String TAG = "LOGIN";
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
@@ -65,9 +65,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private View mProgressView;
     private View mLoginFormView;
 
+    private RedditClient mRedditClient = GlobalVars.getRedditClient();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG,"++onCreate()++");
+        Log.d(TAG, "++onCreate()++");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
@@ -96,30 +98,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         mLoginFormView = findViewById(R.id.login_form);
         mProgressView = findViewById(R.id.login_progress);
-    }
-
-    @Override
-    protected void onResume(){
-        Log.d(TAG,"++onResume()++");
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause(){
-        Log.d(TAG,"++onPause()++");
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy(){
-        Log.d(TAG,"++onDestroy()++");
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onStart(){
-        Log.d(TAG,"++onStart()++");
-        super.onStart();
     }
 
     private void populateAutoComplete() {
@@ -188,8 +166,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         View focusView = null;
 
         // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
+        if (TextUtils.isEmpty(password)) {
+            mPasswordView.setError(getString(R.string.error_field_required));
             focusView = mPasswordView;
             cancel = true;
         }
@@ -212,11 +190,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask = new UserLoginTask(email, password);
             mAuthTask.execute((Void) null);
         }
-    }
-
-    private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
-        return password.length() > 4;
     }
 
     /**
@@ -309,6 +282,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         int IS_PRIMARY = 1;
     }
 
+    void loginSuccess() {
+        Intent intent = new Intent(this, SubredditsList.class);
+        startActivity(intent);
+    }
+
     /**
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
@@ -325,25 +303,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            // TODO: attempt authentication against a network service.
-
+            Credentials credentials = Credentials.script(mUsername, mPassword, "DRKgThgoqFNKiw", "tJREym70kRI9fb8YG2qyF5wcRVk");
             try {
-                // Simulate network access.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                return false;
+                mRedditClient.authenticate(mRedditClient.getOAuthHelper().easyAuth(credentials));
+                return true;
+            } catch (Exception e) {
+                // invalid credentials
+                e.printStackTrace();
             }
-
-            for (String credential : DUMMY_CREDENTIALS) {
-                String[] pieces = credential.split(":");
-                if (pieces[0].equals(mUsername)) {
-                    // Account exists, return true if the password matches.
-                    return pieces[1].equals(mPassword);
-                }
-            }
-
-            // TODO: register the new account here.
-            return true;
+            return false;
         }
 
         @Override
@@ -352,7 +320,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             showProgress(false);
 
             if (success) {
-                finish();
+                loginSuccess();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));
                 mPasswordView.requestFocus();
@@ -367,3 +335,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 }
 
+class GlobalVars {
+    private static RedditClient redditClient;
+
+    public static RedditClient getRedditClient() {
+        if (redditClient == null) {
+            redditClient = new RedditClient(UserAgent.of("android", "edu.osu.livereddit", "v1.0", "liveredditosu"));
+        }
+        return redditClient;
+    }
+}

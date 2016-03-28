@@ -1,6 +1,7 @@
 package edu.osu.livereddit;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ import java.util.Date;
 import java.util.List;
 
 public class ThreadsListActivity extends AppCompatActivity {
+
+    public static final String POST_ID = "post_id";
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private String subredditName;
     private List<Submission> submissions;
@@ -34,7 +37,7 @@ public class ThreadsListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_threads_list);
 
-        subredditName = getIntent().getStringExtra("subreddit_name");
+        subredditName = getIntent().getStringExtra(SubredditsList.SUBREDDIT_NAME);
 
         setTitle(subredditName);
 
@@ -69,9 +72,9 @@ public class ThreadsListActivity extends AppCompatActivity {
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                        Intent intent = new Intent(ThreadsListActivity.this, ThreadActivity.class);
-//                        intent.putExtra("thread_full_name", submissions[position].getFullName());
-//                        startActivity(intent);
+                        Intent intent = new Intent(ThreadsListActivity.this, PostActivity.class);
+                        intent.putExtra(POST_ID, submissions.get(position).getId());
+                        startActivity(intent);
                     }
                 });
             } else {

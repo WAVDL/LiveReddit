@@ -14,10 +14,12 @@ import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.UserSubredditsPaginator;
 
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SubredditsList extends AppCompatActivity {
+    public static final String SUBREDDIT_NAME = "subreddit_name";
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private List<Subreddit> subreddits;
     private UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
@@ -61,7 +63,7 @@ public class SubredditsList extends AppCompatActivity {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         Intent intent = new Intent(SubredditsList.this, ThreadsListActivity.class);
-                        intent.putExtra("subreddit_name", subreddits.get(position).getDisplayName());
+                        intent.putExtra(SUBREDDIT_NAME, subreddits.get(position).getDisplayName());
                         startActivity(intent);
                     }
                 });

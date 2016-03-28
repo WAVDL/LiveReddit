@@ -16,7 +16,6 @@ import java.util.List;
 
 public class PostActivity extends AppCompatActivity {
 
-    private static final String POST_IDENTIFIER = "edu.osu.LiveReddit.post_identifier";
     private static Submission post;
     private static TextView postText;
     private static ListView commentListView;
@@ -28,7 +27,7 @@ public class PostActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
-        identifier = getIntent().getStringExtra(POST_IDENTIFIER);
+        identifier = getIntent().getStringExtra(ThreadsListActivity.POST_ID);
         postText = (TextView)findViewById(R.id.post_text);
         commentListView = (ListView)findViewById(R.id.comment_list);
 
@@ -82,7 +81,7 @@ public class PostActivity extends AppCompatActivity {
 
     public static Intent newIntent(Context packageContext, String postIdentifier) {
         Intent i = new Intent(packageContext, PostActivity.class);
-        i.putExtra(POST_IDENTIFIER, postIdentifier);
+        i.putExtra(ThreadsListActivity.POST_ID, postIdentifier);
         return i;
     }
 }

@@ -100,7 +100,7 @@ public class ThreadsListActivity extends AppCompatActivity {
 
             String submissionTime = formatTime(submission.getCreatedUtc());
             TextView detailsTextView = (TextView) rowView.findViewById(R.id.details);
-            detailsTextView.setText(submission.getCommentCount() + " Comments • " + submissionTime + " • u/" + submission.getAuthor());
+            detailsTextView.setText(submission.getCommentCount() + " Comments • " + submissionTime);
 
             return rowView;
         }

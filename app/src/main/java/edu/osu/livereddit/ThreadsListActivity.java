@@ -1,6 +1,7 @@
 package edu.osu.livereddit;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -45,9 +46,8 @@ public class ThreadsListActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Intent intent = new Intent(ThreadsListActivity.this, ThreadActivity.class);
-//                intent.putExtra("thread_full_name", submissions[position].getFullName());
-//                startActivity(intent);
+                Intent intent = PostActivity.newIntent(ThreadsListActivity.this,submissions[position].getSubredditId());
+                startActivity(intent);
             }
         });
     }

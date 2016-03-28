@@ -20,7 +20,7 @@ import java.util.List;
 public class SubredditsList extends AppCompatActivity {
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private List<Subreddit> subreddits;
-    private UserSubredditsPaginator userSubredditsPaginator;
+    private UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
     private ArrayAdapter adapter;
     private boolean canFetchMore = true;
 
@@ -30,7 +30,6 @@ public class SubredditsList extends AppCompatActivity {
         setContentView(R.layout.activity_subreddits_list);
 
         SubredditsListTask subredditsListTask = new SubredditsListTask();
-        userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
         subredditsListTask.execute(1);
 
         ListView listView = (ListView) findViewById(R.id.subreddits_list);
@@ -78,9 +77,7 @@ public class SubredditsList extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Integer... params) {
             List<Subreddit> list = userSubredditsPaginator.next().getChildren();
-            if (list.size() < 25) {
-                canFetchMore = false;
-            }
+            canFetchMore = userSubredditsPaginator.hasNext();
 
             if (params[0] == 1) {
                 subreddits = list;

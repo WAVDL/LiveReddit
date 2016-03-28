@@ -336,7 +336,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 }
 
 class GlobalVars {
-    private static RedditClient redditClient;
+    public static RedditClient redditClient;
 
     public static RedditClient getRedditClient() {
         if (redditClient == null) {

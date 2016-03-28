@@ -14,11 +14,15 @@ import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.UserSubredditsPaginator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class SubredditsList extends AppCompatActivity {
     private RedditClient redditClient = GlobalVars.getRedditClient();
-    private Listing<Subreddit> subreddits;
+    private List<Subreddit> subreddits;
+    private UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
+    private ArrayAdapter adapter;
+    private boolean canFetchMore = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,36 +30,60 @@ public class SubredditsList extends AppCompatActivity {
         setContentView(R.layout.activity_subreddits_list);
 
         SubredditsListTask subredditsListTask = new SubredditsListTask();
-        subredditsListTask.execute((Void) null);
+        subredditsListTask.execute(1);
+
+        ListView listView = (ListView) findViewById(R.id.subreddits_list);
+        listView.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                if (canFetchMore) {
+                    SubredditsListTask subredditsListTask = new SubredditsListTask();
+                    subredditsListTask.execute(page);
+                }
+                return true;
+            }
+        });
     }
 
     private void success() {
         if (!subreddits.isEmpty()) {
-            String[] list = new String[25];
+            List<String> list = new ArrayList<>();
             for (int i = 0; i < subreddits.size(); i++) {
-                list[i] = subreddits.get(i).getDisplayName();
+                list.add(subreddits.get(i).getDisplayName());
             }
 
-            ArrayAdapter adapter = new ArrayAdapter<String>(this, R.layout.subreddits_listview, list);
-            ListView listView = (ListView) findViewById(R.id.subreddits_list);
-            listView.setAdapter(adapter);
-
-            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    Intent intent = new Intent(SubredditsList.this, ThreadsListActivity.class);
-                    intent.putExtra("subreddit_name", subreddits.get(position).getDisplayName());
-                    startActivity(intent);
-                }
-            });
+            // if first fetch
+            if (adapter == null) {
+                adapter = new ArrayAdapter<String>(this, R.layout.subreddits_listview, list);
+                ListView listView = (ListView) findViewById(R.id.subreddits_list);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        Intent intent = new Intent(SubredditsList.this, ThreadsListActivity.class);
+                        intent.putExtra("subreddit_name", subreddits.get(position).getDisplayName());
+                        startActivity(intent);
+                    }
+                });
+            } else {
+                adapter.clear();
+                adapter.addAll(list);
+                adapter.notifyDataSetChanged();
+            }
         }
     }
 
-    public class SubredditsListTask extends AsyncTask<Void, Void, Boolean> {
+    public class SubredditsListTask extends AsyncTask<Integer, Void, Boolean> {
         @Override
-        protected Boolean doInBackground(Void... params) {
-            UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
-            subreddits = userSubredditsPaginator.next();
+        protected Boolean doInBackground(Integer... params) {
+            List<Subreddit> list = userSubredditsPaginator.next().getChildren();
+            canFetchMore = userSubredditsPaginator.hasNext();
+
+            if (params[0] == 1) {
+                subreddits = list;
+            } else {
+                subreddits.addAll(list);
+            }
             return true;
         }
 

@@ -1,7 +1,6 @@
 package edu.osu.livereddit;
 
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -18,12 +17,17 @@ import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Submission;
 import net.dean.jraw.paginators.SubredditPaginator;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class ThreadsListActivity extends AppCompatActivity {
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private String subredditName;
-    private Submission[] submissions;
+    private List<Submission> submissions;
+    SubredditPaginator subredditPaginator = new SubredditPaginator(redditClient, subredditName);
+    private ThreadsArrayAdapter adapter;
+    private boolean canFetchMore = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,35 +38,61 @@ public class ThreadsListActivity extends AppCompatActivity {
 
         setTitle(subredditName);
 
-        ThreadsListTask threadsListTask = new ThreadsListTask();
-        threadsListTask.execute((Void) null);
-    }
+        ThreadsListTask subredditsListTask = new ThreadsListTask();
+        subredditsListTask.execute(1);
 
-    private void success() {
-        ThreadsArrayAdapter adapter = new ThreadsArrayAdapter(this, submissions);
         ListView listView = (ListView) findViewById(R.id.threads_list);
-        listView.setAdapter(adapter);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listView.setOnScrollListener(new EndlessScrollListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = PostActivity.newIntent(ThreadsListActivity.this,submissions[position].getSubredditId());
-                startActivity(intent);
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                if (canFetchMore) {
+                    ThreadsListTask subredditsListTask = new ThreadsListTask();
+                    subredditsListTask.execute(page);
+                }
+                return true;
             }
         });
     }
 
-    public class ThreadsListTask extends AsyncTask<Void, Void, Boolean> {
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            SubredditPaginator subredditPaginator = new SubredditPaginator(redditClient, subredditName);
-            Listing<Submission> list = subredditPaginator.next();
-
-            submissions = new Submission[list.size()];
-            for (int i = 0; i < submissions.length; i++) {
-                submissions[i] = list.get(i);
+    private void success() {
+        if (!submissions.isEmpty()) {
+            List<Submission> list = new ArrayList<>();
+            for (int i = 0; i < submissions.size(); i++) {
+                list.add(submissions.get(i));
             }
 
+            // if first fetch
+            if (adapter == null) {
+                adapter = new ThreadsArrayAdapter(this, submissions);
+                ListView listView = (ListView) findViewById(R.id.threads_list);
+                listView.setAdapter(adapter);
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                        Intent intent = new Intent(ThreadsListActivity.this, ThreadActivity.class);
+//                        intent.putExtra("thread_full_name", submissions[position].getFullName());
+//                        startActivity(intent);
+                    }
+                });
+            } else {
+                adapter.clear();
+                adapter.addAll(list);
+                adapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    public class ThreadsListTask extends AsyncTask<Integer, Void, Boolean> {
+        @Override
+        protected Boolean doInBackground(Integer... params) {
+            List<Submission> list = subredditPaginator.next().getChildren();
+            canFetchMore = subredditPaginator.hasNext();
+
+            if (params[0] == 1) {
+                submissions = list;
+            } else {
+                submissions.addAll(list);
+            }
             return true;
         }
 
@@ -76,9 +106,9 @@ public class ThreadsListActivity extends AppCompatActivity {
 
     public class ThreadsArrayAdapter extends ArrayAdapter {
         private final Context context;
-        private final Submission[] values;
+        private final List<Submission> values;
 
-        public ThreadsArrayAdapter(Context context, Submission[] values) {
+        public ThreadsArrayAdapter(Context context, List<Submission> values) {
             super(context, -1, values);
             this.context = context;
             this.values = values;
@@ -90,7 +120,7 @@ public class ThreadsListActivity extends AppCompatActivity {
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View rowView = inflater.inflate(R.layout.threads_listview, parent, false);
 
-            Submission submission = values[position];
+            Submission submission = values.get(position);
 
             TextView scoreTextView = (TextView) rowView.findViewById(R.id.score);
             scoreTextView.setText(submission.getScore() + "");

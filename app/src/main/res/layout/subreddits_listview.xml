@@ -2,7 +2,8 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:descendantFocusability="blocksDescendants">
 
     <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/subreddit_name"
@@ -22,7 +23,6 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true">
-
         <ImageButton
             android:id="@+id/pin_subreddit"
             android:layout_width="24dp"

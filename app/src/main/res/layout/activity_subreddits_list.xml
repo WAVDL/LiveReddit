@@ -7,7 +7,7 @@
 
     <include
         android:id="@+id/subreddits_toolbar"
-        layout="@layout/subreddits_toolbar" />
+        layout="@layout/toolbar" />
 
     <ListView
         android:layout_width="wrap_content"

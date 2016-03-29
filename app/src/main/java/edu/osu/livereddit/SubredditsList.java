@@ -77,16 +77,6 @@ public class SubredditsList extends AppCompatActivity {
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.subreddit_search:
-                // TODO: handle click
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
     private void success() {
         if (!subreddits.isEmpty()) {
             List<String> list = new ArrayList<>();

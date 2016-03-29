@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
+    android:id="@+id/post_container"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -11,18 +12,9 @@
     tools:context="edu.osu.livereddit.PostActivity"
     android:orientation="vertical">
 
-
-
-
-        <TextView android:id="@+id/post_text"
+    <TextView android:id="@+id/post_text"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Post Content"/>
-        <ListView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/comment_list"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"/>
 
 </LinearLayout>

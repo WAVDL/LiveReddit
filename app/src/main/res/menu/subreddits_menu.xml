@@ -6,6 +6,7 @@
         android:id="@+id/subreddit_search"
         android:icon="@drawable/subreddit_search"
         android:title="search"
-        app:showAsAction="always" />
+        app:showAsAction="always"
+        app:actionViewClass="android.support.v7.widget.SearchView" />
 
 </menu>

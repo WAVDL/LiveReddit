@@ -2,8 +2,10 @@ package edu.osu.livereddit;
 
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -13,11 +15,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import net.dean.jraw.RedditClient;
-import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.UserSubredditsPaginator;
 
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +28,7 @@ public class SubredditsList extends AppCompatActivity {
     private UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
     private ArrayAdapter adapter;
     private boolean canFetchMore = true;
+    private Subreddit searchedSubreddit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,23 @@ public class SubredditsList extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.subreddits_menu, menu);
+
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.subreddit_search));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                SubredditsSearchTask subredditsSearchTask = new SubredditsSearchTask(query);
+                subredditsSearchTask.execute();
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
         return true;
     }
 
@@ -97,6 +115,14 @@ public class SubredditsList extends AppCompatActivity {
         }
     }
 
+    private void subredditSearchCompletion() {
+        if (searchedSubreddit != null) {
+            Intent intent = new Intent(this, ThreadsListActivity.class);
+            intent.putExtra(SUBREDDIT_NAME, searchedSubreddit.getDisplayName());
+            startActivity(intent);
+        }
+    }
+
     public class SubredditsListTask extends AsyncTask<Integer, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Integer... params) {
@@ -116,6 +142,29 @@ public class SubredditsList extends AppCompatActivity {
             if (success) {
                 success();
             }
+        }
+    }
+
+    public class SubredditsSearchTask extends AsyncTask<Void, Void, Boolean> {
+        private String subredditName;
+
+        public SubredditsSearchTask(String subredditName) {
+            this.subredditName = subredditName;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            try {
+                searchedSubreddit = redditClient.getSubreddit(subredditName);
+            } catch (Exception e) { // subreddit doesn't exist
+                searchedSubreddit = null;
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            subredditSearchCompletion();
         }
     }
 }

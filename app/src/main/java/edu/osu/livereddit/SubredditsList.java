@@ -1,33 +1,47 @@
 package edu.osu.livereddit;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import net.dean.jraw.RedditClient;
+import net.dean.jraw.models.Submission;
 import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.UserSubredditsPaginator;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedSet;
 
 public class SubredditsList extends AppCompatActivity {
     public static final String SUBREDDIT_NAME = "subreddit_name";
     public static final String IS_SUBREDDIT_SUBSCRIBER = "is_subreddit_subscriber";
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private List<Subreddit> subreddits;
+    private Set<String> pinnedSubreddits;
     private UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
-    private ArrayAdapter adapter;
+    private SubredditsArrayAdapter adapter;
     private boolean canFetchMore = true;
     private Subreddit searchedSubreddit;
 
@@ -80,14 +94,34 @@ public class SubredditsList extends AppCompatActivity {
 
     private void success() {
         if (!subreddits.isEmpty()) {
-            List<String> list = new ArrayList<>();
-            for (int i = 0; i < subreddits.size(); i++) {
-                list.add(subreddits.get(i).getDisplayName());
+            // make custom subreddit object list
+            List<LRSubreddit> list = new ArrayList<>();
+            // add fetched subscribed subreddits
+            for (Subreddit subreddit : subreddits) {
+                boolean isPinned = pinnedSubreddits.contains(subreddit.getDisplayName());
+                LRSubreddit lrSubreddit = new LRSubreddit(subreddit.getDisplayName(), isPinned);
+                list.add(lrSubreddit);
+            }
+
+            // add pinned subbreddits if not already added
+            for (String pinnedSubreddit : pinnedSubreddits) {
+                if (!subredditsListContains(pinnedSubreddit)) {
+                    list.add(new LRSubreddit(pinnedSubreddit, true));
+                }
+            }
+
+            // add pinned subreddits to the beginning of the list
+            for (int i = 0; i < list.size(); i++) {
+                LRSubreddit lrSubreddit = list.get(i);
+                if (lrSubreddit.isPinned) {
+                    list.remove(i);
+                    list.add(0, lrSubreddit);
+                }
             }
 
             // if first fetch
             if (adapter == null) {
-                adapter = new ArrayAdapter<String>(this, R.layout.subreddits_listview, list);
+                adapter = new SubredditsArrayAdapter(this, list);
                 ListView listView = (ListView) findViewById(R.id.subreddits_list);
                 listView.setAdapter(adapter);
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -102,6 +136,15 @@ public class SubredditsList extends AppCompatActivity {
                 adapter.notifyDataSetChanged();
             }
         }
+    }
+
+    private boolean subredditsListContains(String subredditName) {
+        for (String s : pinnedSubreddits) {
+            if (s.equals(subredditName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void startThreadsListActivity(Subreddit subreddit) {
@@ -120,6 +163,15 @@ public class SubredditsList extends AppCompatActivity {
     public class SubredditsListTask extends AsyncTask<Integer, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Integer... params) {
+            // get stored pinned subbreddits
+            SharedPreferences sharedPreferences = getSharedPreferences(getString(R.string.user_preferences_key), MODE_PRIVATE);
+            Set<String> stringSet = sharedPreferences.getStringSet(getString(R.string.pinned_subbreddits_key), null);
+            pinnedSubreddits = new HashSet<>();
+            if (stringSet != null) {
+                pinnedSubreddits.addAll(stringSet);
+            }
+
+            // get subscribed subreddits
             List<Subreddit> list = userSubredditsPaginator.next().getChildren();
             canFetchMore = userSubredditsPaginator.hasNext();
 
@@ -160,5 +212,81 @@ public class SubredditsList extends AppCompatActivity {
         protected void onPostExecute(final Boolean success) {
             subredditSearchCompletion();
         }
+    }
+
+    public class SubredditsArrayAdapter extends ArrayAdapter {
+        private final Context context;
+        private final List<LRSubreddit> values;
+
+        public SubredditsArrayAdapter(Context context, List<LRSubreddit> values) {
+            super(context, -1, values);
+            this.context = context;
+            this.values = values;
+        }
+
+        @Override
+        public View getView(int position, final View convertView, ViewGroup parent) {
+            LayoutInflater inflater = (LayoutInflater) context
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            View rowView = inflater.inflate(R.layout.subreddits_listview, parent, false);
+
+            final LRSubreddit lrSubreddit = values.get(position);
+
+            TextView nameTextView = (TextView) rowView.findViewById(R.id.subreddit_name);
+            nameTextView.setText(lrSubreddit.subredditDisplayName);
+
+            ImageButton subredditPinButton = (ImageButton) rowView.findViewById(R.id.pin_subreddit);
+            if (lrSubreddit.isPinned) {
+                subredditPinButton.setBackgroundResource(R.drawable.subreddit_pinned);
+            }
+
+            subredditPinButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    SharedPreferences sharedPreferences = context.getSharedPreferences(getString(R.string.user_preferences_key), context.MODE_PRIVATE);
+                    // create a new set since you should never modify the return value of getStringSet
+                    Set<String> stringSet = new HashSet<>(sharedPreferences.getStringSet(getString(R.string.pinned_subbreddits_key), new HashSet<String>()));
+
+                    if (lrSubreddit.isPinned) {
+                        stringSet.remove(lrSubreddit.subredditDisplayName);
+                        v.setBackgroundResource(R.drawable.subreddit_unpinned);
+                    } else {
+                        stringSet.add(lrSubreddit.subredditDisplayName);
+                        v.setBackgroundResource(R.drawable.subreddit_pinned);
+                    }
+                    lrSubreddit.isPinned = !lrSubreddit.isPinned;
+
+                    sharedPreferences.edit()
+                            .putStringSet(getString(R.string.pinned_subbreddits_key), stringSet)
+                            .apply();
+                }
+            });
+
+            return rowView;
+        }
+    }
+}
+
+class LRSubreddit implements Comparator<LRSubreddit> {
+    public String subredditDisplayName;
+    public boolean isPinned;
+
+    public LRSubreddit(String subredditDisplayName, boolean isPinned) {
+        this.subredditDisplayName = subredditDisplayName;
+        this.isPinned = isPinned;
+    }
+
+    @Override
+    public int compare(LRSubreddit lhs, LRSubreddit rhs) {
+        return lhs.subredditDisplayName.compareTo(rhs.subredditDisplayName);
+    }
+
+    @Override
+    public boolean equals(Object another) {
+        if (this.getClass() == another.getClass()) {
+            LRSubreddit lrSubreddit = (LRSubreddit) another;
+            return this.subredditDisplayName.equals(lrSubreddit.subredditDisplayName);
+        }
+        return false;
     }
 }

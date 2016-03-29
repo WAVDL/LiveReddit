@@ -16,4 +16,6 @@
     <string name="login_button">Login</string>
     <string name="username_edit_text">Username</string>
     <string name="password_edit_text">Password</string>
+    <string name="user_preferences_key">edu.osu.livereddit.user_pref</string>
+    <string name="pinned_subbreddits_key">pinned_subreddits</string>
 </resources>

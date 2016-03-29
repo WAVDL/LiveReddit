@@ -11,28 +11,22 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import net.dean.jraw.RedditClient;
-import net.dean.jraw.models.Submission;
 import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.UserSubredditsPaginator;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.SortedSet;
 
 public class SubredditsList extends AppCompatActivity {
     public static final String SUBREDDIT_NAME = "subreddit_name";
@@ -267,26 +261,12 @@ public class SubredditsList extends AppCompatActivity {
     }
 }
 
-class LRSubreddit implements Comparator<LRSubreddit> {
+class LRSubreddit {
     public String subredditDisplayName;
     public boolean isPinned;
 
     public LRSubreddit(String subredditDisplayName, boolean isPinned) {
         this.subredditDisplayName = subredditDisplayName;
         this.isPinned = isPinned;
-    }
-
-    @Override
-    public int compare(LRSubreddit lhs, LRSubreddit rhs) {
-        return lhs.subredditDisplayName.compareTo(rhs.subredditDisplayName);
-    }
-
-    @Override
-    public boolean equals(Object another) {
-        if (this.getClass() == another.getClass()) {
-            LRSubreddit lrSubreddit = (LRSubreddit) another;
-            return this.subredditDisplayName.equals(lrSubreddit.subredditDisplayName);
-        }
-        return false;
     }
 }

@@ -51,6 +51,7 @@ public class SubredditsList extends AppCompatActivity {
         subredditsListTask.execute(1);
 
         ListView listView = (ListView) findViewById(R.id.subreddits_list);
+        listView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
         listView.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
@@ -89,18 +90,18 @@ public class SubredditsList extends AppCompatActivity {
     private void success() {
         if (!subreddits.isEmpty()) {
             // make custom subreddit object list
-            List<LRSubreddit> list = new ArrayList<>();
+            final List<LRSubreddit> list = new ArrayList<>();
             // add fetched subscribed subreddits
             for (Subreddit subreddit : subreddits) {
                 boolean isPinned = pinnedSubreddits.contains(subreddit.getDisplayName());
-                LRSubreddit lrSubreddit = new LRSubreddit(subreddit.getDisplayName(), isPinned);
+                LRSubreddit lrSubreddit = new LRSubreddit(subreddit.getDisplayName(), true, isPinned);
                 list.add(lrSubreddit);
             }
 
             // add pinned subbreddits if not already added
             for (String pinnedSubreddit : pinnedSubreddits) {
                 if (!subredditsListContains(pinnedSubreddit)) {
-                    list.add(new LRSubreddit(pinnedSubreddit, true));
+                    list.add(new LRSubreddit(pinnedSubreddit, false, true));
                 }
             }
 
@@ -121,7 +122,7 @@ public class SubredditsList extends AppCompatActivity {
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        startThreadsListActivity(subreddits.get(position));
+                        startThreadsListActivity(list.get(position));
                     }
                 });
             } else {
@@ -141,16 +142,16 @@ public class SubredditsList extends AppCompatActivity {
         return false;
     }
 
-    private void startThreadsListActivity(Subreddit subreddit) {
+    private void startThreadsListActivity(LRSubreddit lrSubreddit) {
         Intent intent = new Intent(this, ThreadsListActivity.class);
-        intent.putExtra(SUBREDDIT_NAME, subreddit.getDisplayName());
-        intent.putExtra(IS_SUBREDDIT_SUBSCRIBER, subreddit.isUserSubscriber());
+        intent.putExtra(SUBREDDIT_NAME, lrSubreddit.subredditDisplayName);
+        intent.putExtra(IS_SUBREDDIT_SUBSCRIBER, lrSubreddit.isSubscriber);
         startActivity(intent);
     }
 
     private void subredditSearchCompletion() {
         if (searchedSubreddit != null) {
-            startThreadsListActivity(searchedSubreddit);
+            startThreadsListActivity(new LRSubreddit(searchedSubreddit.getDisplayName(), searchedSubreddit.isUserSubscriber(), false));
         }
     }
 
@@ -263,10 +264,12 @@ public class SubredditsList extends AppCompatActivity {
 
 class LRSubreddit {
     public String subredditDisplayName;
+    public boolean isSubscriber;
     public boolean isPinned;
 
-    public LRSubreddit(String subredditDisplayName, boolean isPinned) {
+    public LRSubreddit(String subredditDisplayName, boolean isSubscriber, boolean isPinned) {
         this.subredditDisplayName = subredditDisplayName;
+        this.isSubscriber = isSubscriber;
         this.isPinned = isPinned;
     }
 }

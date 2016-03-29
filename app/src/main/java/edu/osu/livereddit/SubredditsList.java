@@ -23,6 +23,7 @@ import java.util.List;
 
 public class SubredditsList extends AppCompatActivity {
     public static final String SUBREDDIT_NAME = "subreddit_name";
+    public static final String IS_SUBREDDIT_SUBSCRIBER = "is_subreddit_subscriber";
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private List<Subreddit> subreddits;
     private UserSubredditsPaginator userSubredditsPaginator = new UserSubredditsPaginator(redditClient, "subscriber");
@@ -92,9 +93,7 @@ public class SubredditsList extends AppCompatActivity {
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Intent intent = new Intent(SubredditsList.this, ThreadsListActivity.class);
-                        intent.putExtra(SUBREDDIT_NAME, subreddits.get(position).getDisplayName());
-                        startActivity(intent);
+                        startThreadsListActivity(subreddits.get(position));
                     }
                 });
             } else {
@@ -105,11 +104,16 @@ public class SubredditsList extends AppCompatActivity {
         }
     }
 
+    private void startThreadsListActivity(Subreddit subreddit) {
+        Intent intent = new Intent(this, ThreadsListActivity.class);
+        intent.putExtra(SUBREDDIT_NAME, subreddit.getDisplayName());
+        intent.putExtra(IS_SUBREDDIT_SUBSCRIBER, subreddit.isUserSubscriber());
+        startActivity(intent);
+    }
+
     private void subredditSearchCompletion() {
         if (searchedSubreddit != null) {
-            Intent intent = new Intent(this, ThreadsListActivity.class);
-            intent.putExtra(SUBREDDIT_NAME, searchedSubreddit.getDisplayName());
-            startActivity(intent);
+            startThreadsListActivity(searchedSubreddit);
         }
     }
 

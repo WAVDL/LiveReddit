@@ -5,7 +5,10 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -14,9 +17,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import net.dean.jraw.RedditClient;
-import net.dean.jraw.models.Listing;
 import net.dean.jraw.models.Submission;
+import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.SubredditPaginator;
+import net.dean.jraw.managers.AccountManager;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,13 +35,18 @@ public class ThreadsListActivity extends AppCompatActivity {
     SubredditPaginator subredditPaginator;
     private ThreadsArrayAdapter adapter;
     private boolean canFetchMore = true;
+    private boolean isUserSubscribed;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_threads_list);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.threads_list_toolbar);
+        setSupportActionBar(toolbar);
+
         subredditName = getIntent().getStringExtra(SubredditsList.SUBREDDIT_NAME);
+        isUserSubscribed = getIntent().getBooleanExtra(SubredditsList.IS_SUBREDDIT_SUBSCRIBER, false);
 
         setTitle(subredditName);
 
@@ -57,6 +66,47 @@ public class ThreadsListActivity extends AppCompatActivity {
                 return true;
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.threads_list_menu, menu);
+        if (isUserSubscribed) {
+            menu.findItem(R.id.subreddit_subscribe).setTitle("unsubscribe");
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.subreddit_subscribe:
+                subscribeButtonClicked(item);
+                return true;
+
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    private void subscribeButtonClicked(MenuItem item) {
+        if (isUserSubscribed) {
+            SubredditSubscribeTask subredditSubscribeTask = new SubredditSubscribeTask(false);
+            subredditSubscribeTask.execute();
+
+            item.setTitle("subscribe");
+            isUserSubscribed = false;
+        } else {
+            SubredditSubscribeTask subredditSubscribeTask = new SubredditSubscribeTask(true);
+            subredditSubscribeTask.execute();
+
+            item.setTitle("unsubscribe");
+            isUserSubscribed = true;
+        }
+    }
+
+    private void subredditSubscribeSucess(boolean didSubscribe) {
+
     }
 
     private void success() {
@@ -149,6 +199,34 @@ public class ThreadsListActivity extends AppCompatActivity {
                 return minutes / 60 + "h";
             }
             return minutes / 60 / 24 + "d";
+        }
+    }
+
+    public class SubredditSubscribeTask extends AsyncTask<Void, Void, Boolean> {
+        private boolean shouldSubscribe;
+
+        public SubredditSubscribeTask(boolean shouldSubscribe) {
+            this.shouldSubscribe = shouldSubscribe;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            AccountManager accountManager = new AccountManager(redditClient);
+            Subreddit subreddit = redditClient.getSubreddit(subredditName);
+
+            if (shouldSubscribe) {
+                accountManager.subscribe(subreddit);
+            } else {
+                accountManager.unsubscribe(subreddit);
+            }
+            return true;
+        }
+
+        @Override
+        protected void onPostExecute(final Boolean success) {
+            if (success) {
+                subredditSubscribeSucess(shouldSubscribe);
+            }
         }
     }
 }

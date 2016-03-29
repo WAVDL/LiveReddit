@@ -28,7 +28,7 @@ public class ThreadsListActivity extends AppCompatActivity {
     private RedditClient redditClient = GlobalVars.getRedditClient();
     private String subredditName;
     private List<Submission> submissions;
-    SubredditPaginator subredditPaginator = new SubredditPaginator(redditClient, subredditName);
+    SubredditPaginator subredditPaginator;
     private ThreadsArrayAdapter adapter;
     private boolean canFetchMore = true;
 
@@ -40,6 +40,8 @@ public class ThreadsListActivity extends AppCompatActivity {
         subredditName = getIntent().getStringExtra(SubredditsList.SUBREDDIT_NAME);
 
         setTitle(subredditName);
+
+        subredditPaginator = new SubredditPaginator(redditClient, subredditName);
 
         ThreadsListTask subredditsListTask = new ThreadsListTask();
         subredditsListTask.execute(1);

@@ -189,17 +189,6 @@ public class ThreadsListActivity extends AppCompatActivity {
 
             return rowView;
         }
-
-        private String formatTime(Date date) {
-            Date now = new Date();
-            long minutes = (now.getTime() - date.getTime()) / 1000 / 60;
-            if (minutes < 60) {
-                return minutes + "m";
-            } else if (minutes < 60 * 24) {
-                return minutes / 60 + "h";
-            }
-            return minutes / 60 / 24 + "d";
-        }
     }
 
     public class SubredditSubscribeTask extends AsyncTask<Void, Void, Boolean> {
@@ -228,5 +217,18 @@ public class ThreadsListActivity extends AppCompatActivity {
                 subredditSubscribeSucess(shouldSubscribe);
             }
         }
+    }
+
+    public static String formatTime(Date date) {
+        Date now = new Date();
+        long seconds = (now.getTime() - date.getTime()) / 1000;
+        if (seconds < 60) {
+            return seconds + "s";
+        } else if (seconds < 60 * 60) {
+            return seconds / 60 + "m";
+        } else if (seconds < 60 * 60 * 24) {
+            return seconds / 60 / 60 + "h";
+        }
+        return seconds / 60 / 60 / 24 + "d";
     }
 }

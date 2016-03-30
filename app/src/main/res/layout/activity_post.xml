@@ -1,63 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     android:id="@+id/post_container"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="edu.osu.livereddit.PostActivity"
-    android:orientation="vertical"
-    android:weightSum="1">
+    android:orientation="vertical">
 
-
-    <LinearLayout
-        android:orientation="horizontal"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        >
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="171dp"
-            android:textAlignment="center"
-            android:layout_gravity="center_vertical"
-            android:gravity="center"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Medium Text"
-            android:id="@+id/post_score"/>
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="173dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <TextView android:id="@+id/post_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
             <TextView
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:textAppearance="?android:attr/textAppearanceLarge"
-                     android:text="Medium Text"
-                     android:id="@+id/post_content"/>
+                android:id="@+id/num_comments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingRight="5dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:background="@drawable/border"
+                android:textColor="@color/colorText"
+                android:textSize="14sp" />
+
+            <RelativeLayout
+                android:id="@+id/comments_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
-    </LinearLayout>
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="Small Text"
-        android:id="@+id/post_details"/>
+    </ScrollView>
 
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_width="354dp"
-        android:layout_height="match_parent"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Large Text"
-        android:id="@+id/post_comments"
-        />
-
-</LinearLayout>
+</RelativeLayout>

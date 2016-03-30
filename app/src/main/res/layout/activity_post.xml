@@ -10,11 +10,54 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="edu.osu.livereddit.PostActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:weightSum="1">
 
-    <TextView android:id="@+id/post_text"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Post Content"/>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="171dp"
+            android:textAlignment="center"
+            android:layout_gravity="center_vertical"
+            android:gravity="center"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Medium Text"
+            android:id="@+id/post_score"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="173dp"
+            android:orientation="vertical">
+
+            <TextView
+                     android:layout_width="match_parent"
+                     android:layout_height="match_parent"
+                     android:textAppearance="?android:attr/textAppearanceLarge"
+                     android:text="Medium Text"
+                     android:id="@+id/post_content"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Small Text"
+        android:id="@+id/post_details"/>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="354dp"
+        android:layout_height="match_parent"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Large Text"
+        android:id="@+id/post_comments"
+        />
 
 </LinearLayout>

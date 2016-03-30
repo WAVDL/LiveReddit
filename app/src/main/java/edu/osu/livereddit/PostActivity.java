@@ -12,12 +12,20 @@ import com.unnamed.b.atv.view.AndroidTreeView;
 import net.dean.jraw.models.CommentNode;
 import net.dean.jraw.models.Submission;
 
+import java.util.Date;
+
 public class PostActivity extends AppCompatActivity {
 
     private static Submission post;
-    private static TextView postText;
+    private static TextView postContentView;
+    private static TextView postScoreView;
+    private static TextView postDetailsView;
+    private static TextView postCommentsView;
     private static String identifier;
-    private static String postContent;
+    private static String postTitle;
+    private static String postAuthor;
+    private static int postScore;
+    private static String postSelfText;
     private static CommentNode comments;
 
     @Override
@@ -25,15 +33,34 @@ public class PostActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
         identifier = getIntent().getStringExtra(ThreadsListActivity.POST_ID);
-        postText = (TextView)findViewById(R.id.post_text);
+        postContentView = (TextView)findViewById(R.id.post_content);
+        postScoreView = (TextView)findViewById(R.id.post_score);
+        postDetailsView = (TextView) findViewById(R.id.post_details);
+
 
         CommentListTask commentListTask = new CommentListTask();
         commentListTask.execute((Void) null);
     }
 
-    private void success() {
-        TreeNode root = TreeNode.root();
+    private String formatTime(Date date) {
+        Date now = new Date();
+        long minutes = (now.getTime() - date.getTime()) / 1000 / 60;
+        if (minutes < 60) {
+            return minutes + "m";
+        } else if (minutes < 60 * 24) {
+            return minutes / 60 + "h";
+        }
+        return minutes / 60 / 24 + "d";
+    }
 
+    private void success() {
+
+        postContentView.setText(postTitle + "\n---\n"+ postSelfText);
+        postScoreView.setText(Integer.toString(postScore));
+        String submissionTime = formatTime(post.getCreatedUtc());
+        postDetailsView.setText(post.getCommentCount() + " Comments • " + submissionTime+"\n\n");
+
+        TreeNode root = TreeNode.root();
         // the root comment is empty, only add children nodes
         for (CommentNode commentNode : comments.getChildren()) {
             addCommentsToTreeNode(root, commentNode);
@@ -41,7 +68,7 @@ public class PostActivity extends AppCompatActivity {
 
         // add comments tree to layout
         AndroidTreeView androidTreeView = new AndroidTreeView(this, root);
-        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.post_container);
+        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.post_comments);
         linearLayout.addView(androidTreeView.getView());
     }
 
@@ -59,7 +86,10 @@ public class PostActivity extends AppCompatActivity {
         @Override
         protected Boolean doInBackground(Void... params) {
             post = GlobalVars.getRedditClient().getSubmission(identifier);
-            postContent = post.getSelftext();
+            postSelfText = post.getSelftext();
+            postTitle = post.getTitle();
+            postAuthor = post.getAuthor();
+            postScore = post.getScore();
             comments = post.getComments();
 
             return true;

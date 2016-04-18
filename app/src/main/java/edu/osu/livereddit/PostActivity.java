@@ -1,15 +1,20 @@
 package edu.osu.livereddit;
 
+import android.annotation.TargetApi;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.unnamed.b.atv.model.TreeNode;
 import com.unnamed.b.atv.view.AndroidTreeView;
@@ -22,6 +27,8 @@ public class PostActivity extends AppCompatActivity {
     private static Submission post;
     private static String identifier;
     private static CommentNode comments;
+    private static final String TAG = "PostActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,8 +36,38 @@ public class PostActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post);
         identifier = getIntent().getStringExtra(ThreadsListActivity.POST_ID);
 
-        CommentListTask commentListTask = new CommentListTask();
-        commentListTask.execute((Void) null);
+
+        final ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            CommentListTask commentListTask = new CommentListTask();
+            commentListTask.execute((Void) null);
+        } else {
+            Toast.makeText(PostActivity.this,"Could not load content. :( Check your connection.",Toast.LENGTH_LONG).show();
+        }
+
+
+
+
+
+
+
+    }
+
+    public boolean isConnectedToInternet(){
+        ConnectivityManager connectivity = (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity != null)
+        {
+            NetworkInfo[] info = connectivity.getAllNetworkInfo();
+            if (info != null)
+                for (int i = 0; i < info.length; i++)
+                    if (info[i].getState() == NetworkInfo.State.CONNECTED)
+                    {
+                        return true;
+                    }
+
+        }
+        return false;
     }
 
     private void success() {
@@ -70,9 +107,9 @@ public class PostActivity extends AppCompatActivity {
     public class CommentListTask extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... params) {
-            post = GlobalVars.getRedditClient().getSubmission(identifier);
-            comments = post.getComments();
 
+               post = GlobalVars.getRedditClient().getSubmission(identifier);
+               comments = post.getComments();
             return true;
         }
 

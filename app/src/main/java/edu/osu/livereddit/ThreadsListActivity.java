@@ -2,6 +2,8 @@ package edu.osu.livereddit;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +17,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.dean.jraw.RedditClient;
 import net.dean.jraw.models.Submission;
@@ -52,20 +55,26 @@ public class ThreadsListActivity extends AppCompatActivity {
 
         subredditPaginator = new SubredditPaginator(redditClient, subredditName);
 
-        ThreadsListTask subredditsListTask = new ThreadsListTask();
-        subredditsListTask.execute(1);
+        final ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            ThreadsListTask subredditsListTask = new ThreadsListTask();
+            subredditsListTask.execute(1);
 
-        ListView listView = (ListView) findViewById(R.id.threads_list);
-        listView.setOnScrollListener(new EndlessScrollListener() {
-            @Override
-            public boolean onLoadMore(int page, int totalItemsCount) {
-                if (canFetchMore) {
-                    ThreadsListTask subredditsListTask = new ThreadsListTask();
-                    subredditsListTask.execute(page);
+            ListView listView = (ListView) findViewById(R.id.threads_list);
+            listView.setOnScrollListener(new EndlessScrollListener() {
+                @Override
+                public boolean onLoadMore(int page, int totalItemsCount) {
+                    if (canFetchMore) {
+                        ThreadsListTask subredditsListTask = new ThreadsListTask();
+                        subredditsListTask.execute(page);
+                    }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
+        }else{
+           Toast.makeText(ThreadsListActivity.this,"Could not load content. :( Check your connection.",Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override
@@ -140,14 +149,20 @@ public class ThreadsListActivity extends AppCompatActivity {
     public class ThreadsListTask extends AsyncTask<Integer, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Integer... params) {
-            List<Submission> list = subredditPaginator.next().getChildren();
-            canFetchMore = subredditPaginator.hasNext();
+            List<Submission> list;
+            try {
+                list = subredditPaginator.next().getChildren();
+                canFetchMore = subredditPaginator.hasNext();
 
-            if (params[0] == 1) {
-                submissions = list;
-            } else {
-                submissions.addAll(list);
+                if (params[0] == 1) {
+                    submissions = list;
+                } else {
+                    submissions.addAll(list);
+                }
+            }catch(RuntimeException e){
+                Toast.makeText(ThreadsListActivity.this, "Could not retrieve content. Check your connection.", Toast.LENGTH_LONG).show();
             }
+
             return true;
         }
 

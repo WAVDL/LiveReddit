@@ -3,6 +3,8 @@ package edu.osu.livereddit;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import net.dean.jraw.RedditClient;
 import net.dean.jraw.models.Subreddit;
@@ -47,21 +50,27 @@ public class SubredditsList extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.subreddits_toolbar);
         setSupportActionBar(toolbar);
 
-        SubredditsListTask subredditsListTask = new SubredditsListTask();
-        subredditsListTask.execute(1);
+        final ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            SubredditsListTask subredditsListTask = new SubredditsListTask();
+            subredditsListTask.execute(1);
 
-        ListView listView = (ListView) findViewById(R.id.subreddits_list);
-        listView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-        listView.setOnScrollListener(new EndlessScrollListener() {
-            @Override
-            public boolean onLoadMore(int page, int totalItemsCount) {
-                if (canFetchMore) {
-                    SubredditsListTask subredditsListTask = new SubredditsListTask();
-                    subredditsListTask.execute(page);
+            ListView listView = (ListView) findViewById(R.id.subreddits_list);
+            listView.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+            listView.setOnScrollListener(new EndlessScrollListener() {
+                @Override
+                public boolean onLoadMore(int page, int totalItemsCount) {
+                    if (canFetchMore) {
+                        SubredditsListTask subredditsListTask = new SubredditsListTask();
+                        subredditsListTask.execute(page);
+                    }
+                    return true;
                 }
-                return true;
-            }
-        });
+            });
+        }else{
+            Toast.makeText(SubredditsList.this, "Could not load content. :( Check your connection.", Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override

@@ -202,9 +202,9 @@ public class ThreadsListActivity extends AppCompatActivity {
             TextView titleTextView = (TextView) rowView.findViewById(R.id.title);
             titleTextView.setText(submission.getTitle());
 
-            Uri imageURI = Uri.parse(submission.getThumbnail());
+            /*Uri imageURI = Uri.parse(submission.getThumbnail());
             ImageView thumbnailImageView = (ImageView) rowView.findViewById(R.id.thumbnail);
-            thumbnailImageView.setImageURI(imageURI);
+            thumbnailImageView.setImageURI(imageURI);*/
 
             String submissionTime = formatTime(submission.getCreatedUtc());
             TextView detailsTextView = (TextView) rowView.findViewById(R.id.details);

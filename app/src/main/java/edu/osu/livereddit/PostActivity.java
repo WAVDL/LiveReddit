@@ -23,12 +23,15 @@ import net.dean.jraw.models.Comment;
 import net.dean.jraw.models.CommentNode;
 import net.dean.jraw.models.Submission;
 
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 public class PostActivity extends AppCompatActivity {
     private static Submission post;
     private static String identifier;
     private static CommentNode comments;
     private static final String TAG = "PostActivity";
-
+    private ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,19 +43,22 @@ public class PostActivity extends AppCompatActivity {
         final ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
         if (activeNetwork != null && activeNetwork.isConnected()) {
-            CommentListTask commentListTask = new CommentListTask();
-            commentListTask.execute((Void) null);
+            this.updateComments();
         } else {
             Toast.makeText(PostActivity.this,"Could not load content. :( Check your connection.",Toast.LENGTH_LONG).show();
         }
-
-
-
-
-
-
-
     }
+
+    private void updateComments() {
+        scheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                CommentListTask commentListTask = new CommentListTask();
+                commentListTask.execute((Void) null);
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+    }
+
 
     public boolean isConnectedToInternet(){
         ConnectivityManager connectivity = (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -107,9 +113,8 @@ public class PostActivity extends AppCompatActivity {
     public class CommentListTask extends AsyncTask<Void, Void, Boolean> {
         @Override
         protected Boolean doInBackground(Void... params) {
-
-               post = GlobalVars.getRedditClient().getSubmission(identifier);
-               comments = post.getComments();
+            post = GlobalVars.getRedditClient().getSubmission(identifier);
+            comments = post.getComments();
             return true;
         }
 

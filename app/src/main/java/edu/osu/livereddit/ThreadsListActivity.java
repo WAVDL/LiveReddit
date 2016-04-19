@@ -2,6 +2,8 @@ package edu.osu.livereddit;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -27,6 +29,7 @@ import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.SubredditPaginator;
 import net.dean.jraw.managers.AccountManager;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
@@ -202,9 +205,11 @@ public class ThreadsListActivity extends AppCompatActivity {
             TextView titleTextView = (TextView) rowView.findViewById(R.id.title);
             titleTextView.setText(submission.getTitle());
 
-            /*Uri imageURI = Uri.parse(submission.getThumbnail());
-            ImageView thumbnailImageView = (ImageView) rowView.findViewById(R.id.thumbnail);
-            thumbnailImageView.setImageURI(imageURI);*/
+            String thumbnail = submission.getThumbnail();
+            if (thumbnail != null) { // if null => self post, so no thumbnail
+                ImageView thumbnailImageView = (ImageView) rowView.findViewById(R.id.thumbnail);
+                new ImageDownloader(thumbnailImageView).execute(thumbnail);
+            }
 
             String submissionTime = formatTime(submission.getCreatedUtc());
             TextView detailsTextView = (TextView) rowView.findViewById(R.id.details);
@@ -253,5 +258,29 @@ public class ThreadsListActivity extends AppCompatActivity {
             return seconds / 60 / 60 + "h";
         }
         return seconds / 60 / 60 / 24 + "d";
+    }
+
+    public class ImageDownloader extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+
+        public ImageDownloader(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String url = urls[0];
+            Bitmap mIcon = null;
+            try {
+                InputStream in = new java.net.URL(url).openStream();
+                mIcon = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return mIcon;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setImageBitmap(result);
+        }
     }
 }

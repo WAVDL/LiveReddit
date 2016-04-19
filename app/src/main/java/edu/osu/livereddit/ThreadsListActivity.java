@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +27,8 @@ import net.dean.jraw.models.Subreddit;
 import net.dean.jraw.paginators.SubredditPaginator;
 import net.dean.jraw.managers.AccountManager;
 
+import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -197,6 +201,10 @@ public class ThreadsListActivity extends AppCompatActivity {
 
             TextView titleTextView = (TextView) rowView.findViewById(R.id.title);
             titleTextView.setText(submission.getTitle());
+
+            Uri imageURI = Uri.parse(submission.getThumbnail());
+            ImageView thumbnailImageView = (ImageView) rowView.findViewById(R.id.thumbnail);
+            thumbnailImageView.setImageURI(imageURI);
 
             String submissionTime = formatTime(submission.getCreatedUtc());
             TextView detailsTextView = (TextView) rowView.findViewById(R.id.details);

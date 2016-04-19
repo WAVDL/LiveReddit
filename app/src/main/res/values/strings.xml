@@ -13,9 +13,12 @@
     <string name="permission_rationale">"Contacts permissions are needed for providing email
         completions."
     </string>
+    <string name="speech_recognition_prompt">Speak the subreddit you would like to search for.</string>
     <string name="login_button">Login</string>
     <string name="username_edit_text">Username</string>
     <string name="password_edit_text">Password</string>
     <string name="user_preferences_key">edu.osu.livereddit.user_pref</string>
     <string name="pinned_subbreddits_key">pinned_subreddits</string>
+    <string name="title_activity_speech_recognition">SpeechRecognitionActivity</string>
+    <string name="voice_search_button">Voice Search</string>
 </resources>

@@ -1,5 +1,6 @@
 package edu.osu.livereddit;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -50,9 +52,21 @@ public class SubredditsList extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.subreddits_toolbar);
         setSupportActionBar(toolbar);
 
+
         final ConnectivityManager conMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         final NetworkInfo activeNetwork = conMgr.getActiveNetworkInfo();
         if (activeNetwork != null && activeNetwork.isConnected()) {
+            Button voiceButton = (Button) findViewById(R.id.search_voice_btn);
+            voiceButton.setOnClickListener(new View.OnClickListener(){
+                    public void onClick(View v){
+                        Intent voiceIntent = new Intent(SubredditsList.this,SpeechRecognitionActivity.class);
+                        startActivityForResult(voiceIntent, 0);
+
+                        //getResult and send to SubredditsSearchTask in onActivityResult
+                    }
+
+
+            });
             SubredditsListTask subredditsListTask = new SubredditsListTask();
             subredditsListTask.execute(1);
 
@@ -70,6 +84,21 @@ public class SubredditsList extends AppCompatActivity {
             });
         }else{
             Toast.makeText(SubredditsList.this, "Could not load content. :( Check your connection.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch(requestCode) {
+            case (0) : {
+                if (resultCode == Activity.RESULT_OK) {
+                    String query = data.getStringExtra("SUBREDDITNAME");
+                    SubredditsSearchTask subredditsSearchTask = new SubredditsSearchTask(query);
+                    subredditsSearchTask.execute();
+                }
+                break;
+            }
         }
     }
 
@@ -282,3 +311,9 @@ class LRSubreddit {
         this.isPinned = isPinned;
     }
 }
+
+
+
+
+
+
